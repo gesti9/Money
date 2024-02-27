@@ -1,14 +1,59 @@
 package main
 
+// import (
+// 	"log"
+
+// 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+// )
+
+// func main() {
+// 	bot, err := tgbotapi.NewBotAPI("6796961656:AAGimXMVJzd0a1JwkFvSEqR28mbMQr2aL1k")
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+
+// 	// bot.Debug = true
+
+// 	log.Printf("Authorized on account %s", bot.Self.UserName)
+
+// 	u := tgbotapi.NewUpdate(0)
+// 	u.Timeout = 60
+
+// 	updates := bot.GetUpdatesChan(u)
+
+// 	for update := range updates {
+// 		if update.Message == nil { // ignore any non-Message Updates
+// 			continue
+// 		}
+
+// 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, `Привет:)
+// Напиши нам о своей проблеме!`)
+// 		keyboard := tgbotapi.NewInlineKeyboardMarkup(
+// 			tgbotapi.NewInlineKeyboardRow(
+// 				tgbotapi.NewInlineKeyboardButtonURL("Посетите мой сайт", "https://t.me/Bernar25"),
+// 			),
+// 		)
+// 		msg.ReplyMarkup = keyboard
+
+// 		bot.Send(msg)
+// 	}
+// }
+
 import (
+	"fmt"
 	"log"
+	"money/server"
+	"os"
+	"strconv"
 	"sync"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
-	botToken = "6796961656:AAGimXMVJzd0a1JwkFvSEqR28mbMQr2aL1k"
+	botToken               = "6796961656:AAGimXMVJzd0a1JwkFvSEqR28mbMQr2aL1k"
+	CommandSendApplication = "SEND_APPLICATION"
 )
 
 // Структура для отслеживания состояний
@@ -22,43 +67,22 @@ var (
 	userStates      = make(map[int64]*UserState)
 	userStatesMutex sync.Mutex
 	mainMenu        = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Описать проблему"),
-		),
+
 		tgbotapi.NewKeyboardButtonRow(
 			tgbotapi.NewKeyboardButton("Наши услуги!"),
-			tgbotapi.NewKeyboardButton("О нас!"),
-			tgbotapi.NewKeyboardButton("Предложения!"),
-		),
-	)
-	describeProblemMenu = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Не работает"),
-			tgbotapi.NewKeyboardButton("Проблемы с оплатой"),
-		),
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Другая проблема"),
-			tgbotapi.NewKeyboardButton("Вернуться в предыдущее меню"),
-		),
-	)
-	UslugiMenu = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Онлайн консультация"),
-			tgbotapi.NewKeyboardButton("Обслуживание"),
-		),
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Ремонт и выкуп"),
-			tgbotapi.NewKeyboardButton("Вернуться в предыдущее меню"),
+			tgbotapi.NewKeyboardButton("Ремонт и выкуп!"),
 		),
 	)
 )
 
 func main() {
-	var err error
-	bot, err = tgbotapi.NewBotAPI(botToken)
+	// User("Напишите свой номер сударь") //Отправка пользаку письмо
+	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
 		log.Panic(err)
 	}
+
+	// bot.Debug = true
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
@@ -68,113 +92,98 @@ func main() {
 	updates := bot.GetUpdatesChan(u)
 
 	for update := range updates {
-		handleUpdate(update)
+		if update.Message != nil { // If we got a message
+			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+			res := update.Message.Text
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, res)
+
+			switch update.Message.Text {
+			case "/start":
+				Log("@" + update.Message.From.UserName + "  " + "ИМЯ: " + update.Message.Chat.FirstName + " " + update.Message.Chat.LastName + "  " + "ID: " + strconv.Itoa(int(update.Message.Chat.ID)) + "  " + update.Message.Text + "\n")
+				msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Привет, можешь описать свою проблему и не забудь оставить свои контакты(WhatsApp, Telegram) мы с тобой свяжемся! с/у KazSync:)")
+				msg.ReplyMarkup = mainMenu
+				bot.Send(msg)
+			case "Ремонт и выкуп!":
+				Log("@" + update.Message.From.UserName + "  " + "ИМЯ: " + update.Message.Chat.FirstName + " " + update.Message.Chat.LastName + "  " + "ID: " + strconv.Itoa(int(update.Message.Chat.ID)) + "  " + update.Message.Text + "\n")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, `	Привет:)
+				Высылай все сюда👇🤗`)
+				keyboard := tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonURL("Сontact service", "https://t.me/era_gl450"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+
+						tgbotapi.NewInlineKeyboardButtonURL("Сontact service WhatsApp", "https://wa.me/77473195507"),
+					),
+				)
+				msg.ReplyMarkup = keyboard
+				bot.Send(msg)
+			case "Наши услуги!":
+				Log("@" + update.Message.From.UserName + "  " + "ИМЯ: " + update.Message.Chat.FirstName + " " + update.Message.Chat.LastName + "  " + "ID: " + strconv.Itoa(int(update.Message.Chat.ID)) + "  " + update.Message.Text + "\n")
+				msg := tgbotapi.NewMessage(update.Message.Chat.ID, `🖥️🛠️ Наши услуги 🛠️🖥️
+				🤝 Простое решение компьютерных проблем
+				Помогаем тем, кто не разбирается в компьютерах:
+				
+				🎓 Обучение и консультации: Индивидуальные уроки и консультации по компьютерной грамотности.
+				
+				🔧 Техническая поддержка: Устранение ошибок, настройка ПО, восстановление данных.
+				
+				🚀 Удаленное обслуживание: Онлайн-поддержка и планы обслуживания для оптимальной производительности.
+				
+				🔍 Пользовательские решения: Настройка почты, социальных сетей, помощь с программами.
+				
+				🔄 Обновление и советы: Информация о последних технологиях и рекомендации по обновлению.
+				
+				🚑 Срочный выкуп и ремонт
+				💸 Выкуп: Предоставляем услуги выкупа техники по справедливой цене.
+				
+				🔨 Ремонт: Экспресс-ремонт компьютеров, ноутбуков и гаджетов.
+				
+				Доверьте нам заботу о вашей технике — от решения проблем до выкупа и ремонта.`)
+				bot.Send(msg)
+			default:
+				Log("@" + update.Message.From.UserName + "  " + "ИМЯ: " + update.Message.Chat.FirstName + " " + update.Message.Chat.LastName + "  " + "ID: " + strconv.Itoa(int(update.Message.Chat.ID)) + "  " + update.Message.Text + "\n")
+				Mess("ИМЯ: " + update.Message.Chat.FirstName + " " + update.Message.Chat.LastName + "\n" + update.Message.Text)
+			}
+
+		}
 	}
 }
 
-func handleUpdate(update tgbotapi.Update) {
-	if update.Message != nil {
-		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-		handleMessage(update.Message)
-	}
+func Mess(text string) {
+	c := server.New(botToken)
+
+	c.SendMessage(text, -1002022179282)
+}
+func User(text string) {
+	c := server.New(botToken)
+
+	c.SendMessage(text, 308722033)
+	fmt.Println("Отправил!")
 }
 
-func handleMessage(message *tgbotapi.Message) {
-	msg := tgbotapi.NewMessage(message.Chat.ID, message.Text)
+func Log(n string) {
+	// Получаем текущую дату и время
+	currentTime := time.Now()
 
-	switch message.Text {
-	case "/start":
-		msg.ReplyMarkup = mainMenu
-		mainMenu.ResizeKeyboard = true
-		updateState(message.Chat.ID, "main_menu")
-		msg.Text = "Выберите категорию👇"
-	case "Описать проблему":
-		msg.Text = "Выберите тип проблемы:"
-		msg.ReplyMarkup = describeProblemMenu
-		describeProblemMenu.ResizeKeyboard = true
-		updateState(message.Chat.ID, "describe_problem")
-	case "Вернуться в предыдущее меню":
-		handleReturnToPreviousMenu(message.Chat.ID)
+	// Форматируем дату и время в строку
+	dateTimeString := currentTime.Format("2006-01-02 15:04:05")
+
+	// Имя файла, в который мы будем записывать данные
+	fileName := "log.txt"
+
+	// Открываем файл для записи (если файла нет, он будет создан)
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		fmt.Println("Ошибка при открытии файла:", err)
 		return
-	case "Предложения!":
-		msg.Text = `Ваши идеи - наш источник вдохновения! 🌟
-		Ждем с нетерпением вашего взгляда на вопросы, предложения и замечания. Делитесь своим мнением, вместе мы создадим что-то удивительное! 💡😊`
-	case "Наши услуги!":
-		msg.Text = `Консультации и Решения:
-		Получайте экспертные консультации по различным вопросам и находите эффективные решения для своих задач. 🌐💡 Наша команда готова поддержать вас в разнообразных областях. 🚀
-		
-		Онлайн-Обслуживание:
-		Экономьте свое время, общаясь с нашими специалистами онлайн. 💬💻 Воспользуйтесь современными видеоинструментами для высококачественного обслуживания, не выходя из дома. 🏡🔧
-		
-		Технологическое Обслуживание:
-		Получите полный спектр услуг по техническому обслуживанию. 🛠️🔍 Мы заботимся о вашей технике, чтобы она всегда работала на высшем уровне. 🌟
-		
-		Ремонт и Выкуп Техники:
-		Решайте проблемы с вашими устройствами – наша команда готова провести ремонт и восстановление. 🔧🔄 Если вы решите обновиться, предоставляем выгодные условия по выкупу б/у техники. 💸📱`
-
-		msg.ReplyMarkup = UslugiMenu
-		describeProblemMenu.ResizeKeyboard = true
-	default:
-		// Обработка других сообщений в зависимости от текущего состояния
-		handleOtherMessages(message)
 	}
+	defer file.Close()
 
-	bot.Send(msg)
-}
-
-func handleOtherMessages(message *tgbotapi.Message) {
-	userState := getUserState(message.Chat.ID)
-	switch userState.CurrentState {
-	case "main_menu":
-		// Обработка сообщений в основном меню
-	case "describe_problem":
-		// Обработка сообщений в разделе "Описать проблему"
-		// Можно добавить дополнительную логику в зависимости от выбора пользователя
-	default:
-		// Обработка сообщений в других состояниях
+	// Записываем дату и время в файл
+	_, err = file.WriteString(dateTimeString + "    " + n)
+	if err != nil {
+		fmt.Println("Ошибка при записи в файл:", err)
+		return
 	}
-}
-
-func handleReturnToPreviousMenu(chatID int64) {
-	userState := getUserState(chatID)
-	if userState.PrevState != "" {
-		// Вернуться в предыдущее меню
-		msg := tgbotapi.NewMessage(chatID, "Вы вернулись в предыдущее меню.")
-		msg.ReplyMarkup = mainMenu
-		mainMenu.ResizeKeyboard = true
-		updateState(chatID, userState.PrevState)
-		bot.Send(msg)
-	} else {
-		// Если предыдущего меню нет, отправить информацию пользователю
-		msg := tgbotapi.NewMessage(chatID, "Нет предыдущего меню.")
-		bot.Send(msg)
-	}
-}
-
-// Вспомогательные функции для работы с состояниями
-func updateState(chatID int64, newState string) {
-	userStatesMutex.Lock()
-	defer userStatesMutex.Unlock()
-
-	userState, ok := userStates[chatID]
-	if !ok {
-		userState = &UserState{}
-		userStates[chatID] = userState
-	}
-
-	userState.PrevState = userState.CurrentState
-	userState.CurrentState = newState
-}
-
-func getUserState(chatID int64) *UserState {
-	userStatesMutex.Lock()
-	defer userStatesMutex.Unlock()
-
-	userState, ok := userStates[chatID]
-	if !ok {
-		userState = &UserState{}
-		userStates[chatID] = userState
-	}
-
-	return userState
 }
